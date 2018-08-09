@@ -16,6 +16,7 @@
     "release": "standard-version"
   },
   "dependencies": {
+    "config": "2.0.1",
     "es6-templates": "^0.2.3",
     "fastparse": "^1.1.1",
     "html-minifier": "^3.5.8",

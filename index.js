@@ -6,7 +6,7 @@ var htmlMinifier = require("html-minifier");
 var attrParse = require("./lib/attributesParser");
 var loaderUtils = require("loader-utils");
 var url = require("url");
-var path = require('path');
+var path = require('path').posix;
 var config = require('config');
 var assign = require("object-assign");
 var compile = require("es6-templates").compile;
@@ -53,6 +53,7 @@ module.exports = function(content) {
 		else
 			throw new Error("Invalid value to config parameter attrs");
 	}
+	var resourcePath = this.resourcePath;
 	var root = config.root;
 	var links = attrParse(content, function(tag, attr) {
 		var res = attributes.find(function(a) {
@@ -166,18 +167,21 @@ module.exports = function(content) {
 
 		var urlToRequest;
 		var loaders = '';
-
-		if (config.interpolate === 'require') {
-			urlToRequest = data[match];
-		} else {
-			urlToRequest = loaderUtils.urlToRequest(data[match], root);
-		}
+		var url = data[match];
 
 		if (data[match].endsWith('.html')) {
+			var targetPath = path.join(process.cwd(), 'src/app/js', url);
+			url = path.relative(path.dirname(resourcePath), targetPath);
 			loaders = htmlLoadersChain;
 		}
 
-		return '" + require(' + loaders + JSON.stringify(urlToRequest) + ') + "';
+		if (config.interpolate === 'require') {
+			urlToRequest = url;
+		} else {
+			urlToRequest = loaderUtils.urlToRequest(url, root);
+		}
+
+		return '" + require(' + JSON.stringify(loaders + urlToRequest) + ') + "';
 	}) + ";";
 
 }
