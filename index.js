@@ -137,17 +137,17 @@ module.exports = function(content) {
 		content = JSON.stringify(content);
 	}
 
-    var exportsString = "module.exports = ";
+	var exportsString = "module.exports = ";
 	if (config.exportAsDefault) {
-        exportsString = "exports.default = ";
+		exportsString = "exports.default = ";
 
 	} else if (config.exportAsEs6Default) {
-        exportsString = "export default ";
+		exportsString = "export default ";
 	}
 
  	return exportsString + content.replace(/xxxHTMLLINKxxx[0-9\.]+xxx/g, function(match) {
 		if(!data[match]) return match;
-		
+
 		var urlToRequest;
 
 		if (config.interpolate === 'require') {
@@ -155,7 +155,7 @@ module.exports = function(content) {
 		} else {
 			urlToRequest = loaderUtils.urlToRequest(data[match], root);
 		}
-		
+
 		return '" + require(' + JSON.stringify(urlToRequest) + ') + "';
 	}) + ";";
 
