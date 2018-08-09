@@ -6,6 +6,7 @@ var htmlMinifier = require("html-minifier");
 var attrParse = require("./lib/attributesParser");
 var loaderUtils = require("loader-utils");
 var url = require("url");
+var path = require('path');
 var assign = require("object-assign");
 var compile = require("es6-templates").compile;
 
@@ -27,6 +28,7 @@ module.exports = function(content) {
 	this.cacheable && this.cacheable();
 	var config = getLoaderConfig(this);
 	var attributes = ["img:src"];
+	var extra = config.extra || {};
 	if(config.attrs !== undefined) {
 		if(typeof config.attrs === "string")
 			attributes = config.attrs.split(" ");
@@ -149,6 +151,7 @@ module.exports = function(content) {
 		if(!data[match]) return match;
 
 		var urlToRequest;
+		var loaders = '';
 
 		if (config.interpolate === 'require') {
 			urlToRequest = data[match];
@@ -156,7 +159,16 @@ module.exports = function(content) {
 			urlToRequest = loaderUtils.urlToRequest(data[match], root);
 		}
 
-		return '" + require(' + JSON.stringify(urlToRequest) + ') + "';
+		Object.keys(extra).some(function(key) {
+			var regexp = new RegExp(key);
+
+			if (regexp.test(data[match])) {
+				loaders = extra[key];
+				return true;
+			}
+		});
+
+		return '" + require(' + loaders + JSON.stringify(urlToRequest) + ') + "';
 	}) + ";";
 
 }
