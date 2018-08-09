@@ -7,8 +7,15 @@ var attrParse = require("./lib/attributesParser");
 var loaderUtils = require("loader-utils");
 var url = require("url");
 var path = require('path');
+var config = require('config');
 var assign = require("object-assign");
 var compile = require("es6-templates").compile;
+
+var preprocessingFlags = Object.assign(
+	config.util.toObject(config.get('build.preprocessingFlags')),
+	{ DEBUG: config.get('build.debug') }
+);
+
 
 function randomIdent() {
 	return "xxxHTMLLINKxxx" + Math.random() + Math.random() + "xxx";
@@ -24,11 +31,18 @@ function getLoaderConfig(context) {
 	return assign(query, config);
 }
 
+var htmlLoadersChain = [
+	'!!file-loader?name=' + encodeURIComponent('template/[name].[hash:hex:7].[ext]'),
+	'extract-loader',
+	'extra-html-loader',
+	'preprocess-loader?' + JSON.stringify(preprocessingFlags),
+	''
+].join('!');
+
 module.exports = function(content) {
 	this.cacheable && this.cacheable();
 	var config = getLoaderConfig(this);
-	var attributes = ["img:src"];
-	var extra = config.extra || {};
+	var attributes = ["img:src", ':template-url', ':rad-include'];
 	if(config.attrs !== undefined) {
 		if(typeof config.attrs === "string")
 			attributes = config.attrs.split(" ");
@@ -159,14 +173,9 @@ module.exports = function(content) {
 			urlToRequest = loaderUtils.urlToRequest(data[match], root);
 		}
 
-		Object.keys(extra).some(function(key) {
-			var regexp = new RegExp(key);
-
-			if (regexp.test(data[match])) {
-				loaders = extra[key];
-				return true;
-			}
-		});
+		if (data[match].endsWith('.html')) {
+			loaders = htmlLoadersChain;
+		}
 
 		return '" + require(' + loaders + JSON.stringify(urlToRequest) + ') + "';
 	}) + ";";
