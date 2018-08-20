@@ -32,7 +32,7 @@ function getLoaderConfig(context) {
 }
 
 var htmlLoadersChain = [
-	'!!file-loader?name=' + encodeURIComponent('template/[name].[hash:hex:7].[ext]'),
+	'!!file-loader?name=' + encodeURIComponent('templates/[name].[hash:hex:7].[ext]'),
 	'extract-loader',
 	'extra-html-loader',
 	'preprocess-loader?' + JSON.stringify(preprocessingFlags),
